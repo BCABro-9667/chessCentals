@@ -429,7 +429,9 @@ export default function TournamentDetailsPage() {
                               </div>
                             </div>
                             <div>
-                              <Label htmlFor="publicPaymentScreenshotFile">Payment Screenshot</Label>
+                              <Label htmlFor="publicPaymentScreenshotFile" className="flex items-center">
+                                <Upload className="w-4 h-4 mr-2 text-muted-foreground" /> Payment Screenshot
+                              </Label>
                               <Input
                                 id="publicPaymentScreenshotFile"
                                 type="file"
@@ -672,5 +674,3 @@ export default function TournamentDetailsPage() {
     </>
   );
 }
-
-    
