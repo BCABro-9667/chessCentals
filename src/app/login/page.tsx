@@ -15,8 +15,7 @@ import Link from 'next/link';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading: isAuthLoading } = useAuthMock(); // Renamed isLoading to isAuthLoading
-  const [isSubmitting, setIsSubmitting] = useState(false); // Local submitting state for the form
+  const { login, isLoading: isAuthLoading } = useAuthMock();
   const { toast } = useToast();
 
   const handleSubmit = async (event: FormEvent) => {
@@ -29,43 +28,22 @@ export default function LoginPage() {
       });
       return;
     }
-    setIsSubmitting(true);
-    try {
-      const result = await login(email, password);
-      if (result.success) {
-        toast({
-          title: "Login Successful",
-          description: "Redirecting to your dashboard...",
-        });
-        // Navigation is handled by the login function in useAuthMock
-      } else {
-        toast({
-          title: "Login Failed",
-          description: result.message || "An unexpected error occurred.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+    
+    const result = await login(email, password);
+    if (result.success) {
       toast({
-        title: "Login Error",
-        description: (error as Error).message || "An unexpected error occurred.",
+        title: "Login Successful",
+        description: result.message || "Redirecting to your dashboard...",
+      });
+      // Navigation is handled by the login function in useAuthMock
+    } else {
+      toast({
+        title: "Login Failed",
+        description: result.message || "An unexpected error occurred.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
-
-  if (isAuthLoading) { // Using isAuthLoading from the hook for initial auth check
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 to-accent/5">
-          <p>Loading authentication status...</p>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -89,7 +67,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="text-base"
-                  disabled={isSubmitting}
+                  disabled={isAuthLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -102,16 +80,16 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="text-base"
-                  disabled={isSubmitting}
+                  disabled={isAuthLoading}
                 />
               </div>
-              <Button type="submit" className="w-full text-lg py-3" disabled={isSubmitting || isAuthLoading}>
-                {isSubmitting ? (
+              <Button type="submit" className="w-full text-lg py-3" disabled={isAuthLoading}>
+                {isAuthLoading ? (
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 ) : (
                   <LogIn className="mr-2 h-5 w-5" />
                 )}
-                {isSubmitting ? "Logging in..." : "Login"}
+                {isAuthLoading ? "Logging in..." : "Login"}
               </Button>
             </form>
           </CardContent>

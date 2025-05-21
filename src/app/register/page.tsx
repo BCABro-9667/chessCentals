@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus, LogIn, Loader2 } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -21,7 +21,6 @@ export default function RegisterPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { registerUser, isLoading: isAuthLoading } = useAuthMock();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -41,31 +40,28 @@ export default function RegisterPage() {
       });
       return;
     }
-
-    setIsSubmitting(true);
-    try {
-      const result = await registerUser({ name, email, password });
-      if (result.success) {
-        toast({
-          title: "Registration Successful!",
-          description: result.message,
-        });
-        router.push('/login');
-      } else {
-        toast({
-          title: "Registration Failed",
-          description: result.message,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-       toast({
-        title: "Registration Error",
-        description: (error as Error).message || "An unexpected error occurred.",
+     if (password.length < 6) {
+      toast({
+        title: "Registration Failed",
+        description: "Password must be at least 6 characters long.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
+      return;
+    }
+
+    const result = await registerUser({ name, email, password });
+    if (result.success) {
+      toast({
+        title: "Registration Successful!",
+        description: result.message,
+      });
+      router.push('/login');
+    } else {
+      toast({
+        title: "Registration Failed",
+        description: result.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -91,7 +87,7 @@ export default function RegisterPage() {
                   onChange={(e) => setName(e.target.value)}
                   required
                   className="text-base"
-                  disabled={isSubmitting}
+                  disabled={isAuthLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -104,7 +100,7 @@ export default function RegisterPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="text-base"
-                  disabled={isSubmitting}
+                  disabled={isAuthLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -112,12 +108,12 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="•••••••• (min. 6 characters)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="text-base"
-                  disabled={isSubmitting}
+                  disabled={isAuthLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -130,16 +126,16 @@ export default function RegisterPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   className="text-base"
-                  disabled={isSubmitting}
+                  disabled={isAuthLoading}
                 />
               </div>
-              <Button type="submit" className="w-full text-lg py-3" disabled={isSubmitting || isAuthLoading}>
-                {isSubmitting ? (
+              <Button type="submit" className="w-full text-lg py-3" disabled={isAuthLoading}>
+                {isAuthLoading ? (
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 ) : (
                     <UserPlus className="mr-2 h-5 w-5" />
                 )}
-                {isSubmitting ? "Registering..." : "Register"}
+                {isAuthLoading ? "Registering..." : "Register"}
               </Button>
             </form>
           </CardContent>
