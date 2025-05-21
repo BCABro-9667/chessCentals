@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus, LogIn } from 'lucide-react';
+import { UserPlus, LogIn, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuthMock } from '@/hooks/useAuthMock';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -19,8 +20,10 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const { toast } = useToast();
   const router = useRouter();
+  const { registerUser, isLoading: isAuthLoading } = useAuthMock();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!name || !email || !password || !confirmPassword) {
       toast({
@@ -39,14 +42,31 @@ export default function RegisterPage() {
       return;
     }
 
-    // Mock registration success
-    toast({
-      title: "Registration Successful!",
-      description: "You can now log in with your credentials.",
-    });
-    // In a real app, you would save the user data here.
-    // For this mock, we just redirect to login.
-    router.push('/login');
+    setIsSubmitting(true);
+    try {
+      const result = await registerUser({ name, email, password });
+      if (result.success) {
+        toast({
+          title: "Registration Successful!",
+          description: result.message,
+        });
+        router.push('/login');
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+       toast({
+        title: "Registration Error",
+        description: (error as Error).message || "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -71,6 +91,7 @@ export default function RegisterPage() {
                   onChange={(e) => setName(e.target.value)}
                   required
                   className="text-base"
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -83,6 +104,7 @@ export default function RegisterPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="text-base"
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -95,6 +117,7 @@ export default function RegisterPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="text-base"
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -107,10 +130,16 @@ export default function RegisterPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   className="text-base"
+                  disabled={isSubmitting}
                 />
               </div>
-              <Button type="submit" className="w-full text-lg py-3">
-                <UserPlus className="mr-2 h-5 w-5" /> Register
+              <Button type="submit" className="w-full text-lg py-3" disabled={isSubmitting || isAuthLoading}>
+                {isSubmitting ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                    <UserPlus className="mr-2 h-5 w-5" />
+                )}
+                {isSubmitting ? "Registering..." : "Register"}
               </Button>
             </form>
           </CardContent>

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShieldCheck, LogIn } from 'lucide-react';
+import { ShieldCheck, LogIn, Loader2 } from 'lucide-react';
 import { useAuthMock } from '@/hooks/useAuthMock';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -15,28 +15,48 @@ import Link from 'next/link';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuthMock();
+  const { login, isLoading: isAuthLoading } = useAuthMock(); // Renamed isLoading to isAuthLoading
+  const [isSubmitting, setIsSubmitting] = useState(false); // Local submitting state for the form
   const { toast } = useToast();
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    // In a real app, you'd validate credentials here
-    if (email && password) {
-      toast({
-        title: "Login Successful",
-        description: "Redirecting to your dashboard...",
-      });
-      login(); // This will redirect via the hook
-    } else {
+    if (!email || !password) {
       toast({
         title: "Login Failed",
         description: "Please enter both email and password.",
         variant: "destructive",
       });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const result = await login(email, password);
+      if (result.success) {
+        toast({
+          title: "Login Successful",
+          description: "Redirecting to your dashboard...",
+        });
+        // Navigation is handled by the login function in useAuthMock
+      } else {
+        toast({
+          title: "Login Failed",
+          description: result.message || "An unexpected error occurred.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login Error",
+        description: (error as Error).message || "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (isLoading) {
+  if (isAuthLoading) { // Using isAuthLoading from the hook for initial auth check
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -69,6 +89,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="text-base"
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -81,10 +102,16 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="text-base"
+                  disabled={isSubmitting}
                 />
               </div>
-              <Button type="submit" className="w-full text-lg py-3">
-                <LogIn className="mr-2 h-5 w-5" /> Login
+              <Button type="submit" className="w-full text-lg py-3" disabled={isSubmitting || isAuthLoading}>
+                {isSubmitting ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <LogIn className="mr-2 h-5 w-5" />
+                )}
+                {isSubmitting ? "Logging in..." : "Login"}
               </Button>
             </form>
           </CardContent>
