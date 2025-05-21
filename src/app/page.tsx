@@ -2,6 +2,7 @@
 // src/app/page.tsx
 "use client";
 
+
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -290,16 +291,10 @@ export default function HomePage() {
         {/* Image section - retained for visual break */}
         <section className="py-16 bg-secondary/50 dark:bg-secondary/30">
             <div className="container mx-auto px-4 text-center">
-                <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-foreground">Visualize Your Victory</h2>
+                <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-foreground">Magnus Carlsen</h2>
                 <div className="max-w-4xl mx-auto rounded-lg shadow-2xl overflow-hidden">
-                  <Image 
-                      src="https://placehold.co/1200x600.png" 
-                      alt="Chess Tournament Action"
-                      data-ai-hint="chess tournament action" 
-                      width={1200} 
-                      height={600} 
-                      className="w-full h-auto"
-                  />
+                 <Image src="/meggi.png" alt="MegnusCarlsen Image" width={1000} height={345}/>
+
                 </div>
             </div>
         </section>
