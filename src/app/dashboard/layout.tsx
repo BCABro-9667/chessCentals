@@ -55,7 +55,7 @@ export default function DashboardLayout({
     <SidebarProvider defaultOpen={true}>
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
-        {/* Flex container for the sidebar and the main content area - removed container mx-auto here */}
+        {/* Flex container for the sidebar and the main content area */}
         <div className="flex flex-1">
           {/* Sidebar: Renders as a collapsible panel on desktop, and a sheet on mobile. */}
           {/* `collapsible="icon"` enables the icon-only collapsed state on desktop. */}
@@ -77,8 +77,8 @@ export default function DashboardLayout({
             <div className="p-2 border-b md:hidden sticky top-16 bg-background z-30">
               <SidebarTrigger /> {/* This is the hamburger icon button */}
             </div>
-            {/* Main content area: Scrollable for both x and y overflow. */}
-            <main className="flex-1 p-4 md:p-6 overflow-auto">
+            {/* Main content area: Scrollable for both x and y overflow. Added w-full */}
+            <main className="flex-1 w-full p-4 md:p-6 overflow-auto">
               {children}
             </main>
           </SidebarInset>
