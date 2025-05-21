@@ -55,8 +55,8 @@ export default function DashboardLayout({
     <SidebarProvider defaultOpen={true}>
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
-        {/* Flex container for the sidebar and the main content area */}
-        <div className="container mx-auto px-0 sm:px-4 flex flex-1">
+        {/* Flex container for the sidebar and the main content area - removed container mx-auto here */}
+        <div className="flex flex-1">
           {/* Sidebar: Renders as a collapsible panel on desktop, and a sheet on mobile. */}
           {/* `collapsible="icon"` enables the icon-only collapsed state on desktop. */}
           {/* `print:hidden` ensures it's not printed. */}
