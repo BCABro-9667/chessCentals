@@ -6,7 +6,7 @@ import { Newspaper, Send, Loader2, ImageIcon, TagsIcon, Type, GripVertical } fro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea"; // Changed from RichTextEditor
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { blogCategories, type BlogCategory, type NewBlogPost } from "@/types/blog";
@@ -98,108 +98,110 @@ export default function PublishNewsPage() {
         Share your thoughts, news, and analysis with the chess community.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <Label htmlFor="post-title" className="text-lg">Post Title <span className="text-destructive">*</span></Label>
-          <Input
-            id="post-title"
-            type="text"
-            value={title}
-            onChange={handleTitleChange}
-            placeholder="Enter a catchy title"
-            className="mt-1 text-base"
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="post-slug" className="text-lg">Slug <span className="text-destructive">*</span></Label>
-          <Input
-            id="post-slug"
-            type="text"
-            value={slug}
-            onChange={handleSlugChange}
-            placeholder="e.g., my-awesome-post"
-            className="mt-1 text-base bg-muted/50"
-            required
-          />
-          <p className="text-sm text-muted-foreground mt-1">URL-friendly version of the title. Auto-generated, but can be manually adjusted.</p>
-        </div>
-
-        <div>
-          <Label htmlFor="post-image-url" className="text-lg flex items-center">
-            <ImageIcon className="w-5 h-5 mr-2 text-muted-foreground" /> Cover Image URL
-          </Label>
-          <Input
-            id="post-image-url"
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/your-image.png"
-            className="mt-1 text-base"
-          />
-           <p className="text-sm text-muted-foreground mt-1">Optional: Provide a URL for the post's main image.</p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="max-w-3xl mx-auto w-full"> {/* Added max-width and centering for the form container */}
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label htmlFor="post-category" className="text-lg flex items-center">
-              <GripVertical className="w-5 h-5 mr-2 text-muted-foreground" /> Category <span className="text-destructive">*</span>
-            </Label>
-            <Select value={category} onValueChange={(value) => setCategory(value as BlogCategory)}>
-              <SelectTrigger className="mt-1 text-base">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {blogCategories.map(cat => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="post-title" className="text-lg">Post Title <span className="text-destructive">*</span></Label>
+            <Input
+              id="post-title"
+              type="text"
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="Enter a catchy title"
+              className="mt-1 text-base"
+              required
+            />
           </div>
 
           <div>
-            <Label htmlFor="post-tags" className="text-lg flex items-center">
-                <TagsIcon className="w-5 h-5 mr-2 text-muted-foreground" /> Tags
+            <Label htmlFor="post-slug" className="text-lg">Slug <span className="text-destructive">*</span></Label>
+            <Input
+              id="post-slug"
+              type="text"
+              value={slug}
+              onChange={handleSlugChange}
+              placeholder="e.g., my-awesome-post"
+              className="mt-1 text-base bg-muted/50"
+              required
+            />
+            <p className="text-sm text-muted-foreground mt-1">URL-friendly version of the title. Auto-generated, but can be manually adjusted.</p>
+          </div>
+
+          <div>
+            <Label htmlFor="post-image-url" className="text-lg flex items-center">
+              <ImageIcon className="w-5 h-5 mr-2 text-muted-foreground" /> Cover Image URL
             </Label>
             <Input
-              id="post-tags"
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="e.g., chess, strategy, fun"
+              id="post-image-url"
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://example.com/your-image.png"
               className="mt-1 text-base"
             />
-            <p className="text-sm text-muted-foreground mt-1">Comma-separated list of tags.</p>
+            <p className="text-sm text-muted-foreground mt-1">Optional: Provide a URL for the post's main image.</p>
           </div>
-        </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="post-category" className="text-lg flex items-center">
+                <GripVertical className="w-5 h-5 mr-2 text-muted-foreground" /> Category <span className="text-destructive">*</span>
+              </Label>
+              <Select value={category} onValueChange={(value) => setCategory(value as BlogCategory)}>
+                <SelectTrigger className="mt-1 text-base">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {blogCategories.map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div>
-          <Label htmlFor="post-content" className="text-lg flex items-center">
-            <Type className="w-5 h-5 mr-2 text-muted-foreground" /> Content <span className="text-destructive">*</span>
-          </Label>
-          <Textarea
-            id="post-content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your blog post content here..."
-            className="mt-1 text-base min-h-[300px] resize-y"
-            required
-          />
-           <p className="text-sm text-muted-foreground mt-2">
-            Enter your blog post content. Plain text is supported.
-          </p>
-        </div>
+            <div>
+              <Label htmlFor="post-tags" className="text-lg flex items-center">
+                  <TagsIcon className="w-5 h-5 mr-2 text-muted-foreground" /> Tags
+              </Label>
+              <Input
+                id="post-tags"
+                type="text"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="e.g., chess, strategy, fun"
+                className="mt-1 text-base"
+              />
+              <p className="text-sm text-muted-foreground mt-1">Comma-separated list of tags.</p>
+            </div>
+          </div>
 
-        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoadingBlogPosts}>
-          {isLoadingBlogPosts ? (
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          ) : (
-            <Send className="mr-2 h-5 w-5" />
-          )}
-          {isLoadingBlogPosts ? "Publishing..." : "Publish Post"}
-        </Button>
-      </form>
+          <div>
+            <Label htmlFor="post-content" className="text-lg flex items-center">
+              <Type className="w-5 h-5 mr-2 text-muted-foreground" /> Content <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              id="post-content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write your blog post content here..."
+              className="mt-1 text-base min-h-[300px] resize-y"
+              required
+            />
+            <p className="text-sm text-muted-foreground mt-2">
+              Enter your blog post content. Plain text is supported.
+            </p>
+          </div>
+
+          <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoadingBlogPosts}>
+            {isLoadingBlogPosts ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <Send className="mr-2 h-5 w-5" />
+            )}
+            {isLoadingBlogPosts ? "Publishing..." : "Publish Post"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

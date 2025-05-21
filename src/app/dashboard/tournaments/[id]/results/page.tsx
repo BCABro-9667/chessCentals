@@ -67,13 +67,7 @@ export default function ManageResultsPage() {
   }, [tournamentId, fetchRegistrationsByTournamentId, fetchResultsForTournament]);
   
   useEffect(() => {
-    // This effect syncs the tournament results with the current list of registered players
-    // and the tournament's total rounds. It runs when these key pieces of data change.
     if (tournament && !isLoadingRegistrations && tournament.totalRounds && tournament.totalRounds > 0) {
-      // 'registeredPlayers' is updated when fetchRegistrationsByTournamentId completes.
-      // 'currentTournamentResult' reflects the current state of results (fetched or being managed).
-      // This function will create player score entries for new players, remove old ones,
-      // and adjust roundScore arrays based on current registeredPlayers and totalRounds.
       initializeOrUpdateTournamentResults(tournament.id, registeredPlayers, tournament.totalRounds);
     }
   }, [
@@ -97,7 +91,7 @@ export default function ManageResultsPage() {
       <div className="space-y-6">
         <Skeleton className="h-10 w-3/4" />
         <Skeleton className="h-8 w-1/2 mb-4" />
-        <Card>
+        <Card className="max-w-6xl mx-auto w-full">
           <CardHeader><Skeleton className="h-6 w-1/4" /></CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -158,7 +152,7 @@ export default function ManageResultsPage() {
             <Link href="/dashboard"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard</Link>
           </Button>
         </div>
-        <Card>
+        <Card className="max-w-6xl mx-auto w-full">
             <CardHeader>
                 <CardTitle>No Rounds Defined</CardTitle>
                 <CardDescription>
@@ -183,7 +177,7 @@ export default function ManageResultsPage() {
         </Button>
       </div>
 
-      <Card>
+      <Card className="max-w-6xl mx-auto w-full"> {/* Added max-width and centering */}
         <CardHeader>
           <CardTitle>Enter Scores {isLoadingSavedResults && <Loader2 className="inline w-5 h-5 animate-spin ml-2" />}</CardTitle>
           <CardDescription>

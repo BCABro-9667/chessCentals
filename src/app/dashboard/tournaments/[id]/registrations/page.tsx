@@ -1,4 +1,3 @@
-
 // src/app/dashboard/tournaments/[id]/registrations/page.tsx
 "use client";
 
@@ -137,9 +136,6 @@ export default function ViewRegistrationsPage() {
 
   const toggleFeePaidStatus = async (registration: PlayerRegistration) => {
     const updates: Partial<PlayerRegistration> = { ...registration, feePaid: !registration.feePaid };
-    // Remove id and tournamentId from the direct update payload if your API expects only changes
-    // However, sending the full object (minus id) is often fine for PUT.
-    // For this specific hook, updateRegistration takes the ID separately.
     const payloadToUpdate = { ...updates };
     delete (payloadToUpdate as any).id;
     delete (payloadToUpdate as any).tournamentId;
@@ -203,7 +199,7 @@ export default function ViewRegistrationsPage() {
       <div className="space-y-6">
         <Skeleton className="h-10 w-3/4" />
         <Skeleton className="h-8 w-1/2 mb-4" />
-        <Card>
+        <Card className="max-w-7xl mx-auto w-full">
           <CardHeader><Skeleton className="h-6 w-1/4" /></CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -256,7 +252,7 @@ export default function ViewRegistrationsPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="max-w-7xl mx-auto w-full"> {/* Added max-width and centering */}
         <CardHeader>
           <CardTitle>Player List ({isLoadingRegistrations && currentRegistrations.length === 0 ? <Loader2 className="inline w-4 h-4 animate-spin"/> : currentRegistrations.length})</CardTitle>
           <CardDescription>
@@ -386,5 +382,3 @@ export default function ViewRegistrationsPage() {
     </div>
   );
 }
-
-    
