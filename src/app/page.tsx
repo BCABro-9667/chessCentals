@@ -2,7 +2,7 @@
 // src/app/page.tsx
 "use client";
 
-
+import { useEffect } from 'react'; // Added useEffect
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -12,16 +12,14 @@ import Link from 'next/link';
 import { useTournaments } from '@/hooks/useTournaments';
 import TournamentCard from '@/components/cards/TournamentCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useBlogPosts } from '@/hooks/useBlogPosts'; // Added for blog posts
-import type { BlogPost } from '@/types/blog'; // Added for blog posts
-import { format } from 'date-fns'; // For blog post card
-import { Badge } from '@/components/ui/badge'; // For blog post card
-import { TagsIcon, CornerDownRight } from 'lucide-react'; // For blog post card
+import { useBlogPosts } from '@/hooks/useBlogPosts'; 
+import type { BlogPost } from '@/types/blog'; 
+import { format } from 'date-fns'; 
+import { Badge } from '@/components/ui/badge'; 
+import { TagsIcon, CornerDownRight } from 'lucide-react'; 
 
-// Re-using BlogPostCard from blog page for consistency
-// If a different card style is needed for homepage, this could be a new component.
 function BlogPostCardHome({ post }: { post: BlogPost }) {
-  const excerpt = post.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...'; // Basic excerpt
+  const excerpt = post.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...'; 
 
   return (
     <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -106,8 +104,14 @@ const WorkflowStep = ({ icon: Icon, step, title, description }: { icon: React.El
 
 
 export default function HomePage() {
-  const { tournaments, isLoadingTournaments } = useTournaments();
-  const { blogPosts, isLoadingBlogPosts } = useBlogPosts();
+  const { tournaments, isLoadingTournaments, fetchTournaments } = useTournaments();
+  const { blogPosts, isLoadingBlogPosts, fetchBlogPosts: fetchAllBlogPosts } = useBlogPosts();
+
+  useEffect(() => {
+    fetchTournaments(); // Fetch all tournaments for public display
+    fetchAllBlogPosts(); // Fetch all blog posts for public display
+  }, [fetchTournaments, fetchAllBlogPosts]);
+
 
   const upcomingOrActiveTournaments = tournaments
     .filter(t => t.status === 'Upcoming' || t.status === 'Active')
@@ -154,23 +158,28 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
               Latest Tournaments
             </h2>
-            {isLoadingTournaments ? (
+            {isLoadingTournaments && displayTournaments.length === 0 ? ( // Show skeleton only if loading and no data yet
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[1,2,3].map(i => <Skeleton key={`tourn-skeleton-${i}`} className="h-[450px] w-full rounded-lg"/>)}
               </div>
-            ) : (
+            ) : displayTournaments.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {displayTournaments.map(tournament => (
                   <TournamentCard key={tournament.id} tournament={tournament} />
                 ))}
               </div>
-            )}
-            {tournaments.length > 0 && (
+            ) : null}
+            {tournaments.length > 0 && !isLoadingTournaments && (
               <div className="text-center mt-12">
                 <Button size="lg" asChild variant="secondary">
                   <Link href="/tournaments">View All Tournaments</Link>
                 </Button>
               </div>
+            )}
+            {!isLoadingTournaments && tournaments.length === 0 && (
+                 <div className="text-center py-10">
+                    <p className="text-xl text-muted-foreground">No tournaments available at the moment.</p>
+                </div>
             )}
           </div>
         </section>
@@ -183,24 +192,29 @@ export default function HomePage() {
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
                 Latest From Our Blog
               </h2>
-              {isLoadingBlogPosts ? (
+              {isLoadingBlogPosts && latestBlogPosts.length === 0 ? ( // Show skeleton only if loading and no data yet
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {[1,2,3].map(i => <Skeleton key={`blog-skeleton-${i}`} className="h-[450px] w-full rounded-lg"/>)}
                 </div>
-              ) : (
+              ) : latestBlogPosts.length > 0 ? (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {latestBlogPosts.map((post) => (
                     <BlogPostCardHome key={post.id} post={post} />
                   ))}
                 </div>
-              )}
-              {blogPosts.length > 0 && (
+              ) : null}
+              {blogPosts.length > 0 && !isLoadingBlogPosts && (
                 <div className="text-center mt-12">
                   <Button size="lg" asChild variant="secondary">
                     <Link href="/blog">View All Posts</Link>
                   </Button>
                 </div>
               )}
+               {!isLoadingBlogPosts && blogPosts.length === 0 && (
+                 <div className="text-center py-10">
+                    <p className="text-xl text-muted-foreground">No blog posts available at the moment.</p>
+                </div>
+            )}
             </div>
           </section>
         )}
@@ -309,6 +323,3 @@ export default function HomePage() {
     </>
   );
 }
-
-
-    

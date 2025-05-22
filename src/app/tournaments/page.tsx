@@ -2,6 +2,7 @@
 // src/app/tournaments/page.tsx
 "use client";
 
+import { useEffect } from 'react'; // Added useEffect
 import Header from '@/components/layout/Header';
 import TournamentCard from '@/components/cards/TournamentCard';
 import { useTournaments } from '@/hooks/useTournaments';
@@ -11,7 +12,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function AllTournamentsPage() {
-  const { tournaments, isLoadingTournaments } = useTournaments();
+  const { tournaments, isLoadingTournaments, fetchTournaments } = useTournaments();
+
+  useEffect(() => {
+    fetchTournaments(); // Fetch all tournaments for public display
+  }, [fetchTournaments]);
 
   // Sort tournaments: upcoming first, then active, then completed, then cancelled
   // Within upcoming/active, sort by start date (earliest first)
@@ -48,7 +53,7 @@ export default function AllTournamentsPage() {
             </p>
           </div>
 
-          {isLoadingTournaments && (
+          {isLoadingTournaments && sortedTournaments.length === 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <Skeleton key={i} className="h-96 w-full rounded-lg" />

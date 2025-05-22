@@ -6,7 +6,7 @@ import type { BlogPost, NewBlogPost } from '@/types/blog';
 
 export function useBlogPosts() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Set to false initially
   const [error, setError] = useState<string | null>(null);
 
   const fetchBlogPosts = useCallback(async (authorEmail?: string | null) => {
@@ -19,22 +19,21 @@ export function useBlogPosts() {
       }
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('Failed to fetch blog posts');
+        const errorData = await response.json().catch(() => ({message: 'Failed to fetch blog posts'}));
+        throw new Error(errorData.message || 'Failed to fetch blog posts');
       }
       const data: BlogPost[] = await response.json();
       setBlogPosts(data);
     } catch (err) {
       console.error(err);
       setError((err as Error).message);
+      setBlogPosts([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Initial fetch for public blog page
-  useEffect(() => {
-    fetchBlogPosts();
-  }, [fetchBlogPosts]);
+  // Removed automatic initial fetch. Pages are now responsible for calling fetchBlogPosts.
 
   const addBlogPost = useCallback(async (postData: NewBlogPost & { authorEmail: string }): Promise<BlogPost> => {
     setIsLoading(true);
@@ -50,7 +49,7 @@ export function useBlogPosts() {
         throw new Error(errorData.message || 'Failed to add blog post');
       }
       const newPost: BlogPost = await response.json();
-      await fetchBlogPosts(postData.authorEmail); // Refresh the list for the current author
+      await fetchBlogPosts(postData.authorEmail); 
       return newPost;
     } catch (err) {
       console.error(err);
@@ -68,7 +67,8 @@ export function useBlogPosts() {
       const response = await fetch(`/api/blog/posts/${slug}`);
       if (!response.ok) {
         if (response.status === 404) return null;
-        throw new Error(`Failed to fetch blog post with slug ${slug}`);
+        const errorData = await response.json().catch(() => ({message: `Failed to fetch blog post with slug ${slug}`}));
+        throw new Error(errorData.message || `Failed to fetch blog post with slug ${slug}`);
       }
       const data: BlogPost = await response.json();
       return data;
@@ -85,10 +85,11 @@ export function useBlogPosts() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/admin/blog/${id}`); // Admin route for fetching by ID
+      const response = await fetch(`/api/admin/blog/${id}`); 
       if (!response.ok) {
         if (response.status === 404) return null;
-        throw new Error(`Failed to fetch blog post with ID ${id} for editing`);
+        const errorData = await response.json().catch(() => ({message: `Failed to fetch blog post with ID ${id} for editing`}));
+        throw new Error(errorData.message || `Failed to fetch blog post with ID ${id} for editing`);
       }
       const data: BlogPost = await response.json();
       return data;
@@ -105,7 +106,7 @@ export function useBlogPosts() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/admin/blog/${id}`, { // Admin route for updating
+      const response = await fetch(`/api/admin/blog/${id}`, { 
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(postData),
@@ -115,7 +116,6 @@ export function useBlogPosts() {
         throw new Error(errorData.message || 'Failed to update blog post');
       }
       const updatedPost: BlogPost = await response.json();
-      // We assume authorEmail is part of the postData or the original post for correct re-fetching
       const emailToFetch = postData.authorEmail || updatedPost.authorEmail;
       await fetchBlogPosts(emailToFetch);
       return updatedPost;
@@ -132,14 +132,14 @@ export function useBlogPosts() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/admin/blog/${id}`, { // Admin route for deleting
+      const response = await fetch(`/api/admin/blog/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to delete blog post');
       }
-      await fetchBlogPosts(authorEmail); // Refresh the list, potentially filtered
+      await fetchBlogPosts(authorEmail); 
     } catch (err) {
       console.error(err);
       setError((err as Error).message);

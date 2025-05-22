@@ -3,7 +3,7 @@
 "use client"; 
 
 import Header from '@/components/layout/Header';
-import { useTournaments } from '@/hooks/useTournaments';
+// Removed: import { useTournaments } from '@/hooks/useTournaments';
 import { usePlayerRegistrations } from '@/hooks/usePlayerRegistrations';
 import { useTournamentResults } from '@/hooks/useTournamentResults';
 import { useToast } from '@/hooks/use-toast';
@@ -19,18 +19,17 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type { Tournament } from '@/types/tournament'; // Import Tournament type
 import type { PlayerRegistration } from '@/types/playerRegistration';
 import type { PlayerScore } from '@/types/tournamentResult';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-// Helper function to compare standings (simplified for this context)
 const areStandingsEqual = (s1: PlayerScore[], s2: PlayerScore[]): boolean => {
-  if (!s1 && !s2) return true; // Both null/undefined
-  if (!s1 || !s2) return false; // One is null/undefined
+  if (!s1 && !s2) return true;
+  if (!s1 || !s2) return false;
   if (s1.length !== s2.length) return false;
   for (let i = 0; i < s1.length; i++) {
-    // Comparing essential fields that define a standing entry's identity and core data
     if (s1[i].playerId !== s2[i].playerId || 
         s1[i].totalScore !== s2[i].totalScore || 
         s1[i].roundScores.length !== s2[i].roundScores.length) {
@@ -48,8 +47,10 @@ export default function TournamentDetailsPage() {
   const params = useParams(); 
   const tournamentId = params.id as string; 
 
-  const { getTournamentById, isLoadingTournaments: isLoadingTournamentDetails } = useTournaments();
-  const tournament = getTournamentById(tournamentId);
+  const [tournament, setTournament] = useState<Tournament | null | undefined>(undefined);
+  const [isLoadingTournamentDetails, setIsLoadingTournamentDetails] = useState(true);
+  const [errorLoadingTournament, setErrorLoadingTournament] = useState<string | null>(null);
+
   const { toast } = useToast();
 
   const { 
@@ -88,13 +89,36 @@ export default function TournamentDetailsPage() {
   const [isSubmittingRegistration, setIsSubmittingRegistration] = useState(false);
   const [showRegisteredPlayers, setShowRegisteredPlayers] = useState(true);
 
-
   useEffect(() => {
-    if (tournamentId) {
-      fetchRegistrationsByTournamentId(tournamentId);
-      fetchResultsForTournament(tournamentId);
-    }
+    const fetchTournamentData = async () => {
+      if (!tournamentId) return;
+      setIsLoadingTournamentDetails(true);
+      setErrorLoadingTournament(null);
+      try {
+        const response = await fetch(`/api/tournaments/${tournamentId}`);
+        if (!response.ok) {
+          if (response.status === 404) {
+            setTournament(null); // Not found
+          } else {
+            throw new Error(`Failed to fetch tournament: ${response.statusText}`);
+          }
+        } else {
+          const data: Tournament = await response.json();
+          setTournament(data);
+        }
+      } catch (err) {
+        setErrorLoadingTournament((err as Error).message);
+        setTournament(null);
+      } finally {
+        setIsLoadingTournamentDetails(false);
+      }
+    };
+
+    fetchTournamentData();
+    fetchRegistrationsByTournamentId(tournamentId);
+    fetchResultsForTournament(tournamentId);
   }, [tournamentId, fetchRegistrationsByTournamentId, fetchResultsForTournament]);
+
 
   useEffect(() => {
     if (currentTournamentResult && currentTournamentResult.tournamentId === tournamentId && tournament) {
@@ -111,7 +135,7 @@ export default function TournamentDetailsPage() {
           playerName: playerRegInfo?.playerName || ps.playerName || 'N/A',
           fideRating: playerRegInfo?.fideRating !== undefined ? playerRegInfo.fideRating : ps.fideRating,
           roundScores: newRoundScores.slice(0, currentTotalRounds),
-          totalScore: ps.totalScore, // Assuming totalScore is correctly calculated by the hook/API
+          totalScore: ps.totalScore,
         };
       });
 
@@ -162,6 +186,22 @@ export default function TournamentDetailsPage() {
       </>
     )
   }
+  
+  if (errorLoadingTournament) {
+     return (
+       <>
+        <Header />
+        <main className="container mx-auto px-4 py-10 text-center">
+          <h1 className="text-2xl font-bold text-destructive mb-4">Error loading tournament</h1>
+          <p className="text-muted-foreground mb-6">{errorLoadingTournament}</p>
+           <Button asChild variant="outline">
+             <Link href="/tournaments"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Tournaments</Link>
+           </Button>
+        </main>
+       </>
+     )
+  }
+
 
   if (tournament === null) {
     notFound();

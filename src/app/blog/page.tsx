@@ -1,6 +1,7 @@
 // src/app/blog/page.tsx
 "use client";
 
+import { useEffect } from 'react'; // Added useEffect
 import Header from '@/components/layout/Header';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
 import type { BlogPost } from '@/types/blog';
@@ -68,7 +69,11 @@ function BlogPostCard({ post }: { post: BlogPost }) {
 
 
 export default function BlogListPage() {
-  const { blogPosts, isLoadingBlogPosts, errorBlogPosts } = useBlogPosts();
+  const { blogPosts, isLoadingBlogPosts, errorBlogPosts, fetchBlogPosts } = useBlogPosts();
+
+  useEffect(() => {
+    fetchBlogPosts(); // Fetch all blog posts for public display
+  }, [fetchBlogPosts]);
 
   return (
     <>
@@ -85,7 +90,7 @@ export default function BlogListPage() {
             </p>
           </div>
 
-          {isLoadingBlogPosts && (
+          {isLoadingBlogPosts && blogPosts.length === 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {[1, 2, 3].map((i) => (
                 <Card key={i} className="flex flex-col h-full">
