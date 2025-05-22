@@ -10,9 +10,10 @@ export interface BlogPost {
   imageUrl?: string;
   category: BlogCategory;
   tags: string[]; // Array of tag strings
-  content: string; // HTML content from Rich Text Editor
+  content: string; // Plain text content
   createdAt: string; // ISO Date string
   updatedAt: string; // ISO Date string
+  authorEmail: string; // Added for data ownership
 }
 
 // For creating a new post, ID, createdAt, updatedAt are handled by backend

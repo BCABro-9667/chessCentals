@@ -13,17 +13,8 @@ export interface Tournament {
   status: 'Upcoming' | 'Active' | 'Completed' | 'Cancelled';
   totalRounds?: number; // New field for total rounds
   imageUrl?: string; // New field for custom image URL
-  // registeredPlayers?: Player[]; // Future enhancement
-  // results?: any; // Future enhancement
+  organizerEmail: string; // Added for data ownership
 }
-
-// Example Player type for future use
-// export interface Player {
-//   id: string;
-//   name: string;
-//   rating?: number;
-//   federation?: string;
-// }
 
 export const tournamentTypes: Tournament['type'][] = ['Swiss', 'Round Robin', 'Knockout', 'Arena', 'Scheveningen', 'Other'];
 export const tournamentStatuses: Tournament['status'][] = ['Upcoming', 'Active', 'Completed', 'Cancelled'];

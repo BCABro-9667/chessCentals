@@ -12,26 +12,28 @@ import { useToast } from "@/hooks/use-toast";
 import { blogCategories, type BlogCategory, type NewBlogPost } from "@/types/blog";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
 import { useRouter } from "next/navigation";
+import { useAuthMock } from "@/hooks/useAuthMock"; // Import useAuthMock
 
 const generateSlug = (title: string): string => {
   return title
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '') // remove non-word characters, except spaces and hyphens
-    .replace(/\s+/g, '-')    // replace spaces with hyphens
-    .replace(/-+/g, '-');   // replace multiple hyphens with a single hyphen
+    .replace(/[^\w\s-]/g, '') 
+    .replace(/\s+/g, '-')    
+    .replace(/-+/g, '-');   
 };
 
 export default function PublishNewsPage() {
   const router = useRouter();
   const { addBlogPost, isLoadingBlogPosts } = useBlogPosts();
   const { toast } = useToast();
+  const { currentUserEmail } = useAuthMock(); // Get current user's email
   
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [category, setCategory] = useState<BlogCategory | "">("");
-  const [tags, setTags] = useState(""); // Comma-separated string
+  const [tags, setTags] = useState(""); 
   const [content, setContent] = useState("");
   
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,11 +43,21 @@ export default function PublishNewsPage() {
   };
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSlug(generateSlug(e.target.value)); // Still process it to ensure it's URL-friendly
+    setSlug(generateSlug(e.target.value)); 
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (!currentUserEmail) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to publish a post.",
+        variant: "destructive",
+      });
+      router.push('/login');
+      return;
+    }
 
     if (!title.trim() || !slug.trim() || !category || !content.trim()) {
       toast({
@@ -56,13 +68,14 @@ export default function PublishNewsPage() {
       return;
     }
 
-    const postData: NewBlogPost = {
+    const postData: NewBlogPost & { authorEmail: string } = {
       title,
       slug,
       imageUrl: imageUrl.trim() || undefined,
       category: category as BlogCategory, 
       tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
       content,
+      authorEmail: currentUserEmail, // Add authorEmail
     };
 
     try {
@@ -71,14 +84,13 @@ export default function PublishNewsPage() {
         title: "Blog Post Published!",
         description: `"${newPost.title}" has been successfully published.`,
       });
-      // Clear form
       setTitle("");
       setSlug("");
       setImageUrl("");
       setCategory("");
       setTags("");
       setContent(""); 
-      router.push("/blog"); 
+      router.push("/dashboard/blog-management"); // Redirect to blog management page
     } catch (error) {
        toast({
         title: "Failed to Publish Post",
@@ -98,7 +110,7 @@ export default function PublishNewsPage() {
         Share your thoughts, news, and analysis with the chess community.
       </p>
 
-      <div className="max-w-3xl mx-auto w-full"> {/* Added max-width and centering for the form container */}
+      <div className="max-w-3xl mx-auto w-full">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="post-title" className="text-lg">Post Title <span className="text-destructive">*</span></Label>

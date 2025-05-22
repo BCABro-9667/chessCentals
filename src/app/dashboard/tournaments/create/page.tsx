@@ -9,32 +9,46 @@ import { useState } from "react";
 import type { Tournament } from "@/types/tournament";
 import { format } from "date-fns";
 import { FilePlus2 } from "lucide-react";
+import { useAuthMock } from "@/hooks/useAuthMock"; // Import useAuthMock
 
 export default function CreateTournamentPage() {
   const router = useRouter();
   const { addTournament } = useTournaments();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { currentUserEmail } = useAuthMock(); // Get current user's email
 
-  const handleSubmit = async (data: Omit<Tournament, 'id' | 'status' | 'startDate' | 'endDate'> & { startDate: Date, endDate: Date }) => {
+  const handleSubmit = async (data: Omit<Tournament, 'id' | 'status' | 'startDate' | 'endDate' | 'organizerEmail'> & { startDate: Date, endDate: Date }) => {
     setIsLoading(true);
+    if (!currentUserEmail) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create a tournament.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      router.push('/login'); // Redirect to login if not authenticated
+      return;
+    }
+
     try {
       const tournamentData: Omit<Tournament, 'id' | 'status'> = {
         ...data,
-        startDate: format(data.startDate, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"), // ISO format
-        endDate: format(data.endDate, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),   // ISO format
+        startDate: format(data.startDate, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+        endDate: format(data.endDate, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+        organizerEmail: currentUserEmail, // Add organizerEmail
       };
-      const newTournament = addTournament(tournamentData);
+      const newTournament = await addTournament(tournamentData); // addTournament now returns a promise
       toast({
         title: "Tournament Created!",
         description: `"${newTournament.name}" has been successfully created.`,
       });
-      router.push("/dashboard"); // Or to the new tournament's detail page: `/dashboard/tournaments/${newTournament.id}`
+      router.push("/dashboard"); 
     } catch (error) {
       console.error("Failed to create tournament:", error);
       toast({
         title: "Error Creating Tournament",
-        description: "An unexpected error occurred. Please try again.",
+        description: (error as Error).message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {

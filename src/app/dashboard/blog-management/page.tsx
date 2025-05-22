@@ -23,21 +23,27 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { useAuthMock } from '@/hooks/useAuthMock'; // Import useAuthMock
+import type { BlogPost } from '@/types/blog';
 
 export default function BlogManagementPage() {
   const { blogPosts, isLoadingBlogPosts, errorBlogPosts, deleteBlogPost, fetchBlogPosts } = useBlogPosts();
   const { toast } = useToast();
+  const { currentUserEmail, isLoggedIn } = useAuthMock(); // Get current user's email
 
   useEffect(() => {
-    fetchBlogPosts(); // Fetch posts when component mounts
-  }, [fetchBlogPosts]);
+    if (isLoggedIn && currentUserEmail) { // Only fetch if logged in and email is available
+      fetchBlogPosts(currentUserEmail); 
+    }
+  }, [fetchBlogPosts, currentUserEmail, isLoggedIn]);
 
-  const handleDeletePost = async (postId: string, postTitle: string) => {
+  const handleDeletePost = async (post: BlogPost) => {
     try {
-      await deleteBlogPost(postId);
+      // Pass authorEmail to deleteBlogPost for correct re-fetching if needed
+      await deleteBlogPost(post.id, post.authorEmail); 
       toast({
         title: "Blog Post Deleted",
-        description: `"${postTitle}" has been successfully deleted.`,
+        description: `"${post.title}" has been successfully deleted.`,
       });
     } catch (error) {
       toast({
@@ -71,9 +77,9 @@ export default function BlogManagementPage() {
     return (
       <div className="text-center py-10">
         <Newspaper className="w-16 h-16 mx-auto text-destructive mb-4" />
-        <h2 className="text-2xl font-semibold text-destructive mb-2">Error Loading Blog Posts</h2>
+        <h2 className="text-2xl font-semibold text-destructive mb-2">Error Loading Your Blog Posts</h2>
         <p className="text-muted-foreground mb-4">{errorBlogPosts}</p>
-        <Button onClick={fetchBlogPosts}>Try Again</Button>
+        <Button onClick={() => currentUserEmail && fetchBlogPosts(currentUserEmail)}>Try Again</Button>
       </div>
     );
   }
@@ -83,7 +89,7 @@ export default function BlogManagementPage() {
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-3xl font-bold text-foreground flex items-center">
           <FileText className="w-8 h-8 mr-3 text-primary" />
-          Manage Blog Posts
+          Manage Your Blog Posts
         </h1>
         <Button asChild size="lg">
           <Link href="/dashboard/publish-news">
@@ -94,14 +100,14 @@ export default function BlogManagementPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Blog Posts ({blogPosts.length})</CardTitle>
-          <CardDescription>View, edit, or delete existing blog posts.</CardDescription>
+          <CardTitle>Your Blog Posts ({blogPosts.length})</CardTitle>
+          <CardDescription>View, edit, or delete your existing blog posts.</CardDescription>
         </CardHeader>
         <CardContent>
           {blogPosts.length === 0 ? (
             <div className="text-center py-10">
               <Newspaper className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <p className="text-xl text-muted-foreground">No blog posts found.</p>
+              <p className="text-xl text-muted-foreground">You haven&apos;t published any blog posts yet.</p>
               <p className="text-sm text-muted-foreground">
                 <Link href="/dashboard/publish-news" className="text-primary hover:underline">
                   Create your first post
@@ -161,7 +167,7 @@ export default function BlogManagementPage() {
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDeletePost(post.id, post.title)}
+                                onClick={() => handleDeletePost(post)}
                                 className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                                 disabled={isLoadingBlogPosts}
                               >

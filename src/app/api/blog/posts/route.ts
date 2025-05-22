@@ -2,12 +2,20 @@
 import { NextResponse } from 'next/server';
 import { getBlogPostsCollection } from '@/lib/mongodb';
 import type { NewBlogPost, BlogPost } from '@/types/blog';
-import { ObjectId } from 'mongodb';
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const authorEmail = searchParams.get('authorEmail');
+
     const postsCollection = await getBlogPostsCollection();
-    const postsFromDb = await postsCollection.find({}).sort({ createdAt: -1 }).toArray();
+    
+    const query: any = {};
+    if (authorEmail) {
+      query.authorEmail = authorEmail;
+    }
+    
+    const postsFromDb = await postsCollection.find(query).sort({ createdAt: -1 }).toArray();
     
     const posts = postsFromDb.map(p => {
       const { _id, ...rest } = p;
@@ -23,26 +31,28 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const postData = await request.json() as NewBlogPost;
+    const postData = await request.json() as NewBlogPost & { authorEmail: string };
     
-    if (!postData.title || !postData.slug || !postData.content || !postData.category) {
-        return NextResponse.json({ message: 'Missing required blog post data (title, slug, content, category)' }, { status: 400 });
+    if (!postData.title || !postData.slug || !postData.content || !postData.category || !postData.authorEmail) {
+        return NextResponse.json({ message: 'Missing required blog post data (title, slug, content, category, authorEmail)' }, { status: 400 });
     }
 
-    // Ensure tags is an array
     const tags = Array.isArray(postData.tags) ? postData.tags : (postData.tags ? String(postData.tags).split(',').map(tag => tag.trim()).filter(tag => tag) : []);
 
-
     const newPostDocument: Omit<BlogPost, 'id'> = {
-      ...postData,
+      title: postData.title,
+      slug: postData.slug,
+      imageUrl: postData.imageUrl,
+      category: postData.category,
       tags,
+      content: postData.content,
+      authorEmail: postData.authorEmail, // Save authorEmail
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     const postsCollection = await getBlogPostsCollection();
     
-    // Optional: Check for slug uniqueness if desired, or let database index handle it
     const existingPostBySlug = await postsCollection.findOne({ slug: newPostDocument.slug });
     if (existingPostBySlug) {
         return NextResponse.json({ message: `A post with slug "${newPostDocument.slug}" already exists. Please use a unique slug.` }, { status: 409 });

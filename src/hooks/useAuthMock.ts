@@ -6,17 +6,22 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { NewUser } from '@/types/user';
 
 const AUTH_KEY = 'isLoggedInChessmate';
+const USER_EMAIL_KEY = 'currentUserEmailChessmate'; // Key for storing user email
 
 export function useAuthMock() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(false); // For API call loading state
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     const storedAuth = localStorage.getItem(AUTH_KEY);
     const authStatus = storedAuth === 'true';
+    const storedEmail = localStorage.getItem(USER_EMAIL_KEY);
+    
     setIsLoggedIn(authStatus);
+    setCurrentUserEmail(authStatus ? storedEmail : null);
 
     if (pathname?.startsWith('/dashboard') && !authStatus && isLoggedIn === false) {
       router.replace('/login');
@@ -56,7 +61,9 @@ export function useAuthMock() {
 
       if (response.ok && result.success) {
         localStorage.setItem(AUTH_KEY, 'true');
+        localStorage.setItem(USER_EMAIL_KEY, email); // Store email on login
         setIsLoggedIn(true);
+        setCurrentUserEmail(email); // Set email in state
         router.push('/dashboard');
         return { success: true, message: result.message };
       } else {
@@ -71,22 +78,19 @@ export function useAuthMock() {
 
   const logout = useCallback(async () => {
     // Optional: Call a backend logout endpoint if it does server-side session invalidation
-    // For now, it's primarily client-side for this mock setup
-    // try {
-    //   await fetch('/api/auth/logout', { method: 'POST' });
-    // } catch (error) {
-    //   console.error("Logout API call failed:", error);
-    // }
     localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(USER_EMAIL_KEY); // Clear email on logout
     setIsLoggedIn(false);
+    setCurrentUserEmail(null); // Clear email from state
     router.push('/login');
   }, [router]);
 
   return { 
     isLoggedIn, 
+    currentUserEmail, // Expose current user's email
     login, 
     logout, 
     registerUser, 
-    isLoading: isLoading || isLoggedIn === undefined // isLoading is true if API call is in progress OR initial auth check is pending
+    isLoading: isLoading || isLoggedIn === undefined 
   };
 }

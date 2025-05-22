@@ -42,21 +42,22 @@ export async function PUT(
       return NextResponse.json({ message: 'Invalid blog post ID format' }, { status: 400 });
     }
 
-    const updates = (await request.json()) as Partial<NewBlogPost>;
+    // Ensure authorEmail is not part of updatable fields from client here
+    // Ownership change should be a separate, more secure process if needed.
+    const updates = (await request.json()) as Partial<Omit<NewBlogPost, 'authorEmail'>>; 
 
-    // Ensure tags is an array if provided
     if (updates.tags && !Array.isArray(updates.tags)) {
         updates.tags = String(updates.tags).split(',').map(tag => tag.trim()).filter(tag => tag);
     }
 
-
     const updateDoc: any = { ...updates, updatedAt: new Date().toISOString() };
-    // Prevent changing the ID or slug directly in some cases if needed, but for now allow slug update
-    // delete updateDoc.id; // id is not part of NewBlogPost
+    
+    // delete updateDoc.authorEmail; // Explicitly ensure authorEmail cannot be changed
+    // if ('authorEmail' in updateDoc) delete updateDoc.authorEmail;
+
 
     const postsCollection = await getBlogPostsCollection();
     
-    // If slug is being updated, check for uniqueness against other posts
     if (updates.slug) {
         const existingPostBySlug = await postsCollection.findOne({ slug: updates.slug, _id: { $ne: new ObjectId(id) } });
         if (existingPostBySlug) {
@@ -64,6 +65,9 @@ export async function PUT(
         }
     }
     
+    // Future: Add ownership check here before updating.
+    // For now, any user who can access this admin route can update.
+
     const result = await postsCollection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: updateDoc },
@@ -94,6 +98,8 @@ export async function DELETE(
       return NextResponse.json({ message: 'Invalid blog post ID format' }, { status: 400 });
     }
 
+    // Future: Add ownership check here before deleting.
+    // For now, any user who can access this admin route can delete.
     const postsCollection = await getBlogPostsCollection();
     const result = await postsCollection.deleteOne({ _id: new ObjectId(id) });
 

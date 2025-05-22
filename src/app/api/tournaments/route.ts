@@ -6,10 +6,18 @@ import { ObjectId } from 'mongodb';
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const organizerEmail = searchParams.get('organizerEmail');
+
     const tournamentsCollection = await getTournamentsCollection();
-    const tournamentsFromDb = await tournamentsCollection.find({}).sort({ startDate: -1 }).toArray();
     
-    // Map _id to id and convert ObjectId to string
+    const query: any = {};
+    if (organizerEmail) {
+      query.organizerEmail = organizerEmail;
+    }
+
+    const tournamentsFromDb = await tournamentsCollection.find(query).sort({ startDate: -1 }).toArray();
+    
     const tournaments = tournamentsFromDb.map(t => {
       const { _id, ...rest } = t;
       return { ...rest, id: _id.toHexString() };
@@ -26,18 +34,17 @@ export async function POST(request: Request) {
   try {
     const tournamentData = await request.json() as Omit<Tournament, 'id' | 'status'>;
     
-    // Basic validation can be done here with Zod if needed, or rely on frontend validation
-    if (!tournamentData.name || !tournamentData.startDate) {
-        return NextResponse.json({ message: 'Missing required tournament data (name, startDate)' }, { status: 400 });
+    if (!tournamentData.name || !tournamentData.startDate || !tournamentData.organizerEmail) {
+        return NextResponse.json({ message: 'Missing required tournament data (name, startDate, organizerEmail)' }, { status: 400 });
     }
 
     const newTournament: Omit<Tournament, 'id'> = {
       ...tournamentData,
-      status: 'Upcoming', // Default status for new tournaments
+      status: 'Upcoming', 
     };
 
     const tournamentsCollection = await getTournamentsCollection();
-    const result = await tournamentsCollection.insertOne(newTournament as any); // Cast to any to let MongoDB handle _id
+    const result = await tournamentsCollection.insertOne(newTournament as any); 
 
     if (!result.insertedId) {
         return NextResponse.json({ message: 'Failed to insert tournament into database' }, { status: 500 });

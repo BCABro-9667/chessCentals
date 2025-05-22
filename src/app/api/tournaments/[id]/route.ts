@@ -17,7 +17,7 @@ export async function GET(
 
     if (tournamentFromDb) {
       const { _id, ...rest } = tournamentFromDb;
-      const tournament = { ...rest, id: _id.toHexString() };
+      const tournament = { ...rest, id: _id.toHexString() } as Tournament; // Ensure organizerEmail is part of rest
       return NextResponse.json(tournament);
     } else {
       return NextResponse.json({ message: 'Tournament not found' }, { status: 404 });
@@ -36,26 +36,29 @@ export async function PUT(
     if (!ObjectId.isValid(params.id)) {
       return NextResponse.json({ message: 'Invalid tournament ID format' }, { status: 400 });
     }
-    const updates = await request.json() as Partial<Omit<Tournament, 'id'>>; // Exclude 'id' from updatable fields via body
+    // Ensure organizerEmail is not part of the updatable fields from client for general updates
+    // Ownership change should be a separate, more secure process if needed.
+    const updates = await request.json() as Partial<Omit<Tournament, 'id' | 'organizerEmail'>>; 
 
-    // Prevent changing the ID via PUT request body
-    if ('id' in updates) {
-      delete (updates as any).id;
-    }
-    if ('_id' in updates) {
-      delete (updates as any)._id;
-    }
+    if ('id' in updates) delete (updates as any).id;
+    if ('_id' in updates) delete (updates as any)._id;
+    // if ('organizerEmail' in updates) delete (updates as any).organizerEmail; // Prevent changing owner easily
 
     const tournamentsCollection = await getTournamentsCollection();
+    
+    // For status-only updates, the body might only contain { status: 'NewStatus' }
+    // For full edits, it would contain other fields.
+    // The Omit in the type definition helps guide what fields are generally updatable.
+
     const result = await tournamentsCollection.findOneAndUpdate(
       { _id: new ObjectId(params.id) },
-      { $set: updates },
-      { returnDocument: 'after' } // Return the updated document
+      { $set: updates }, 
+      { returnDocument: 'after' }
     );
 
     if (result) {
       const { _id, ...updatedTournamentData } = result;
-      const updatedTournament = { ...updatedTournamentData, id: _id.toHexString() };
+      const updatedTournament = { ...updatedTournamentData, id: _id.toHexString() } as Tournament;
       return NextResponse.json(updatedTournament);
     } else {
       return NextResponse.json({ message: 'Tournament not found for update' }, { status: 404 });
@@ -74,6 +77,7 @@ export async function DELETE(
     if (!ObjectId.isValid(params.id)) {
       return NextResponse.json({ message: 'Invalid tournament ID format' }, { status: 400 });
     }
+    // Future: Add ownership check here. For now, any authenticated user (via dashboard access) can delete.
     const tournamentsCollection = await getTournamentsCollection();
     const result = await tournamentsCollection.deleteOne({ _id: new ObjectId(params.id) });
 

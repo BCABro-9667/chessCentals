@@ -9,11 +9,15 @@ export function useBlogPosts() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBlogPosts = useCallback(async () => {
+  const fetchBlogPosts = useCallback(async (authorEmail?: string | null) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/blog/posts');
+      let url = '/api/blog/posts';
+      if (authorEmail) {
+        url += `?authorEmail=${encodeURIComponent(authorEmail)}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch blog posts');
       }
@@ -27,7 +31,12 @@ export function useBlogPosts() {
     }
   }, []);
 
-  const addBlogPost = useCallback(async (postData: NewBlogPost): Promise<BlogPost> => {
+  // Initial fetch for public blog page
+  useEffect(() => {
+    fetchBlogPosts();
+  }, [fetchBlogPosts]);
+
+  const addBlogPost = useCallback(async (postData: NewBlogPost & { authorEmail: string }): Promise<BlogPost> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -41,7 +50,7 @@ export function useBlogPosts() {
         throw new Error(errorData.message || 'Failed to add blog post');
       }
       const newPost: BlogPost = await response.json();
-      await fetchBlogPosts(); // Refresh the list
+      await fetchBlogPosts(postData.authorEmail); // Refresh the list for the current author
       return newPost;
     } catch (err) {
       console.error(err);
@@ -76,7 +85,7 @@ export function useBlogPosts() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/admin/blog/${id}`);
+      const response = await fetch(`/api/admin/blog/${id}`); // Admin route for fetching by ID
       if (!response.ok) {
         if (response.status === 404) return null;
         throw new Error(`Failed to fetch blog post with ID ${id} for editing`);
@@ -92,11 +101,11 @@ export function useBlogPosts() {
     }
   }, []);
 
-  const updateBlogPost = useCallback(async (id: string, postData: Partial<NewBlogPost>): Promise<BlogPost> => {
+  const updateBlogPost = useCallback(async (id: string, postData: Partial<NewBlogPost & { authorEmail: string }>): Promise<BlogPost> => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/admin/blog/${id}`, {
+      const response = await fetch(`/api/admin/blog/${id}`, { // Admin route for updating
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(postData),
@@ -106,7 +115,9 @@ export function useBlogPosts() {
         throw new Error(errorData.message || 'Failed to update blog post');
       }
       const updatedPost: BlogPost = await response.json();
-      await fetchBlogPosts(); // Refresh the list
+      // We assume authorEmail is part of the postData or the original post for correct re-fetching
+      const emailToFetch = postData.authorEmail || updatedPost.authorEmail;
+      await fetchBlogPosts(emailToFetch);
       return updatedPost;
     } catch (err) {
       console.error(err);
@@ -117,18 +128,18 @@ export function useBlogPosts() {
     }
   }, [fetchBlogPosts]);
 
-  const deleteBlogPost = useCallback(async (id: string): Promise<void> => {
+  const deleteBlogPost = useCallback(async (id: string, authorEmail?: string | null): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/admin/blog/${id}`, {
+      const response = await fetch(`/api/admin/blog/${id}`, { // Admin route for deleting
         method: 'DELETE',
       });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to delete blog post');
       }
-      await fetchBlogPosts(); // Refresh the list
+      await fetchBlogPosts(authorEmail); // Refresh the list, potentially filtered
     } catch (err) {
       console.error(err);
       setError((err as Error).message);
@@ -138,17 +149,11 @@ export function useBlogPosts() {
     }
   }, [fetchBlogPosts]);
 
-
-  // Fetch initial posts when hook is first used
-  useEffect(() => {
-    fetchBlogPosts();
-  }, [fetchBlogPosts]);
-
   return {
     blogPosts,
     isLoadingBlogPosts: isLoading,
     errorBlogPosts: error,
-    fetchBlogPosts, // To allow manual refresh
+    fetchBlogPosts, 
     addBlogPost,
     getBlogPostBySlug,
     getBlogPostByIdForEdit,

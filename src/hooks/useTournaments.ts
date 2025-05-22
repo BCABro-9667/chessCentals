@@ -9,11 +9,15 @@ export function useTournaments() {
   const [isLoadingTournaments, setIsLoadingTournaments] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTournaments = useCallback(async () => {
+  const fetchTournaments = useCallback(async (organizerEmail?: string | null) => {
     setIsLoadingTournaments(true);
     setError(null);
     try {
-      const response = await fetch('/api/tournaments');
+      let url = '/api/tournaments';
+      if (organizerEmail) {
+        url += `?organizerEmail=${encodeURIComponent(organizerEmail)}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch tournaments: ${response.statusText}`);
       }
@@ -28,8 +32,12 @@ export function useTournaments() {
     }
   }, []);
 
+  // Initial fetch for public pages (all tournaments)
   useEffect(() => {
-    fetchTournaments();
+    // This initial fetch might be redundant if dashboard pages always call with email
+    // Or, we can decide if public pages show all or if this hook is dashboard-specific
+    // For now, let it fetch all initially for broader use (e.g., public /tournaments page)
+    fetchTournaments(); 
   }, [fetchTournaments]);
 
   const addTournament = useCallback(async (tournamentData: Omit<Tournament, 'id' | 'status'>) => {
@@ -48,8 +56,9 @@ export function useTournaments() {
         throw new Error(errorData.message || `Failed to add tournament: ${response.statusText}`);
       }
       const newTournament: Tournament = await response.json();
-      // setTournaments(prevTournaments => [newTournament, ...prevTournaments].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()));
-      await fetchTournaments(); // Re-fetch to ensure sorted list and single source of truth
+      // Re-fetch based on current context (e.g., if organizerEmail was used for initial load)
+      // For simplicity, we can re-fetch all or based on a passed param if this hook serves both dashboard and public
+      await fetchTournaments(tournamentData.organizerEmail); // Re-fetch for the specific organizer after adding
       return newTournament;
     } catch (err) {
       console.error("Failed to add tournament via API", err);
@@ -64,7 +73,8 @@ export function useTournaments() {
     return tournaments.find(t => t.id === id);
   }, [tournaments]);
 
-  const updateTournament = useCallback(async (id: string, tournamentData: Omit<Tournament, 'id' | 'status'>) => {
+  const updateTournament = useCallback(async (id: string, tournamentData: Partial<Omit<Tournament, 'id' | 'status' | 'organizerEmail'>>) => {
+    // OrganizerEmail should not be updatable through this general update path
     setIsLoadingTournaments(true);
     setError(null);
     try {
@@ -80,8 +90,9 @@ export function useTournaments() {
         throw new Error(errorData.message || `Failed to update tournament: ${response.statusText}`);
       }
       const updatedTournament: Tournament = await response.json();
-      // setTournaments(prev => prev.map(t => (t.id === id ? updatedTournament : t)).sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()));
-      await fetchTournaments(); // Re-fetch for consistency
+      // Smart re-fetch: if current tournaments are filtered by an email, re-fetch with that email
+      const currentFilteredEmail = tournaments.length > 0 ? tournaments[0].organizerEmail : undefined;
+      await fetchTournaments(currentFilteredEmail); // Or, if this tournament's organizerEmail is known and consistent
       return updatedTournament;
     } catch (err) {
       console.error(`Failed to update tournament ${id} via API`, err);
@@ -90,11 +101,12 @@ export function useTournaments() {
     } finally {
       setIsLoadingTournaments(false);
     }
-  }, [fetchTournaments]);
+  }, [fetchTournaments, tournaments]);
 
   const updateTournamentStatus = useCallback(async (id: string, status: Tournament['status']) => {
     setError(null);
     const originalTournaments = [...tournaments];
+     // Optimistic update
     setTournaments(prev => prev.map(t => t.id === id ? { ...t, status } : t));
 
     try {
@@ -103,19 +115,24 @@ export function useTournaments() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status }), // Only sending status for this specific function
+        body: JSON.stringify({ status }), 
       });
       if (!response.ok) {
         const errorData = await response.json();
+        setTournaments(originalTournaments); // Rollback optimistic update
         throw new Error(errorData.message || `Failed to update tournament status: ${response.statusText}`);
       }
-       await fetchTournaments(); 
+      // Successful update, fetch based on potential current filter
+      const updatedTournament: Tournament = await response.json();
+      setTournaments(prev => prev.map(t => (t.id === id ? updatedTournament : t))
+        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+      );
     } catch (err) {
       console.error("Failed to update tournament status via API", err);
       setError((err as Error).message);
-      setTournaments(originalTournaments); 
+      // Rollback already happened if errorData was parsed
     }
-  }, [tournaments, fetchTournaments]);
+  }, [tournaments]);
 
   const deleteTournament = useCallback(async (id: string) => {
     setIsLoadingTournaments(true);
@@ -128,8 +145,8 @@ export function useTournaments() {
         const errorData = await response.json();
         throw new Error(errorData.message || `Failed to delete tournament: ${response.statusText}`);
       }
-      // setTournaments(prev => prev.filter(t => t.id !== id));
-      await fetchTournaments(); // Re-fetch
+      const currentFilteredEmail = tournaments.length > 0 && tournaments.some(t => t.id === id) ? tournaments.find(t=> t.id === id)?.organizerEmail : undefined;
+      await fetchTournaments(currentFilteredEmail);
     } catch (err) {
       console.error(`Failed to delete tournament ${id} via API`, err);
       setError((err as Error).message);
@@ -137,6 +154,10 @@ export function useTournaments() {
     } finally {
       setIsLoadingTournaments(false);
     }
+  }, [fetchTournaments, tournaments]);
+
+  const refreshTournaments = useCallback((organizerEmail?: string | null) => {
+    fetchTournaments(organizerEmail);
   }, [fetchTournaments]);
 
 
@@ -149,6 +170,6 @@ export function useTournaments() {
     deleteTournament,
     isLoadingTournaments,
     errorLoadingTournaments: error,
-    refreshTournaments: fetchTournaments 
+    refreshTournaments
   };
 }
