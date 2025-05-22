@@ -72,6 +72,72 @@ export function useBlogPosts() {
     }
   }, []);
 
+  const getBlogPostByIdForEdit = useCallback(async (id: string): Promise<BlogPost | null> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/blog/${id}`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error(`Failed to fetch blog post with ID ${id} for editing`);
+      }
+      const data: BlogPost = await response.json();
+      return data;
+    } catch (err) {
+      console.error(err);
+      setError((err as Error).message);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const updateBlogPost = useCallback(async (id: string, postData: Partial<NewBlogPost>): Promise<BlogPost> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/blog/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(postData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update blog post');
+      }
+      const updatedPost: BlogPost = await response.json();
+      await fetchBlogPosts(); // Refresh the list
+      return updatedPost;
+    } catch (err) {
+      console.error(err);
+      setError((err as Error).message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchBlogPosts]);
+
+  const deleteBlogPost = useCallback(async (id: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/blog/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete blog post');
+      }
+      await fetchBlogPosts(); // Refresh the list
+    } catch (err) {
+      console.error(err);
+      setError((err as Error).message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchBlogPosts]);
+
 
   // Fetch initial posts when hook is first used
   useEffect(() => {
@@ -85,5 +151,8 @@ export function useBlogPosts() {
     fetchBlogPosts, // To allow manual refresh
     addBlogPost,
     getBlogPostBySlug,
+    getBlogPostByIdForEdit,
+    updateBlogPost,
+    deleteBlogPost,
   };
 }
