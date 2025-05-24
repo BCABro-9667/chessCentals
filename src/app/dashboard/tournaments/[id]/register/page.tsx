@@ -322,7 +322,7 @@ export default function RegisterPlayerPage() {
               {isSubmitting || isLoadingRegistrations ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Register Player
+              Register_Player
             </Button>
           </CardFooter>
         </form>

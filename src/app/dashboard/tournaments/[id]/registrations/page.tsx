@@ -239,7 +239,7 @@ export default function ViewRegistrationsPage() {
            {(tournament?.status === 'Active' || tournament?.status === 'Upcoming') && (
             <Button asChild>
                 <Link href={`/dashboard/tournaments/${tournamentId}/register`}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Register Player
+                <PlusCircle className="mr-2 h-4 w-4" /> RegisterPlayer
                 </Link>
             </Button>
             )}

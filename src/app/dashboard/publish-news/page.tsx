@@ -101,7 +101,7 @@ export default function PublishNewsPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" >
       <div className="flex items-center gap-3">
         <Newspaper className="w-8 h-8 text-primary" />
         <h1 className="text-3xl font-bold text-foreground">Create Blog Post</h1>
@@ -110,7 +110,7 @@ export default function PublishNewsPage() {
         Share your thoughts, news, and analysis with the chess community.
       </p>
 
-      <div className="max-w-3xl mx-auto w-full">
+      <div className="max-w-5xl mx-auto w-full"> {/* Changed max-w-3xl to max-w-5xl */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="post-title" className="text-lg">Post Title <span className="text-destructive">*</span></Label>

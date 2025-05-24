@@ -126,7 +126,7 @@ export default function EditBlogPostPage() {
           <Skeleton className="h-10 w-32" />
         </div>
         <Skeleton className="h-8 w-1/3 mb-2" />
-        <div className="space-y-4 max-w-3xl mx-auto">
+        <div className="space-y-4 max-w-3xl mx-auto"> {/* Consistent with publish form, but now parent is max-w-5xl */}
           {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
           <Skeleton className="h-10 w-40" />
         </div>
@@ -155,7 +155,7 @@ export default function EditBlogPostPage() {
         Modify the details for &quot;{originalPost?.title}&quot;.
       </p>
 
-      <div className="max-w-3xl mx-auto w-full">
+      <div className="max-w-5xl mx-auto w-full"> {/* Changed max-w-3xl to max-w-5xl */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <Label htmlFor="post-title" className="text-lg">Post Title <span className="text-destructive">*</span></Label>

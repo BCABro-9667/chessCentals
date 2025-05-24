@@ -17,6 +17,7 @@ import type { BlogPost } from '@/types/blog';
 import { format } from 'date-fns'; 
 import { Badge } from '@/components/ui/badge'; 
 import { TagsIcon, CornerDownRight } from 'lucide-react'; 
+import hero from './hero1.png'
 
 function BlogPostCardHome({ post }: { post: BlogPost }) {
   const excerpt = post.content.replace(/<[^>]+>/g, '').substring(0, 120) + '...'; 
@@ -131,7 +132,7 @@ export default function HomePage() {
       <Header />
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-br from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20">
+        <section className="py-2 md:py-28 bg-gradient-to-br from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20" style={{marginTop: -60}}>
           <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-8 md:gap-12">
             <div className="md:w-1/2 text-center md:text-left">
               <Crown className="w-20 h-20 md:w-24 md:h-24 text-primary mx-auto md:mx-0 mb-6" />
@@ -151,11 +152,11 @@ export default function HomePage() {
               </div>
             </div>
             <div className="md:w-1/2 mt-8 md:mt-0 flex justify-center">
-              <div className="relative w-full max-w-md md:max-w-lg aspect-[4/3] rounded-lg overflow-hidden shadow-2xl">
+              <div className="relative w-full max-w-md md:max-w-lg  ">
                 <Image
-                  src="https://placehold.co/600x450.png" 
+                  src={hero} 
                   alt="3D Chessboard visualization with people playing"
-                  fill
+                  // fill
                   style={{objectFit: "cover"}}
                   className="bg-muted"
                   data-ai-hint="3D chess game"
