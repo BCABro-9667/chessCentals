@@ -2,7 +2,7 @@
 // src/app/page.tsx
 "use client";
 
-import { useEffect } from 'react'; // Added useEffect
+import { useEffect } from 'react'; 
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -108,8 +108,8 @@ export default function HomePage() {
   const { blogPosts, isLoadingBlogPosts, fetchBlogPosts: fetchAllBlogPosts } = useBlogPosts();
 
   useEffect(() => {
-    fetchTournaments(); // Fetch all tournaments for public display
-    fetchAllBlogPosts(); // Fetch all blog posts for public display
+    fetchTournaments(); 
+    fetchAllBlogPosts(); 
   }, [fetchTournaments, fetchAllBlogPosts]);
 
 
@@ -132,21 +132,36 @@ export default function HomePage() {
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="py-20 md:py-28 bg-gradient-to-br from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20">
-          <div className="container mx-auto px-4 text-center">
-            <Crown className="w-20 h-20 md:w-24 md:h-24 text-primary mx-auto mb-6" />
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-foreground">
-              Welcome to Chessmate Central
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto">
-              Your all-in-one platform for organizing, managing, and participating in chess tournaments with unparalleled ease and sophistication.
-            </p>
-            <div className="space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button size="lg" asChild className="w-full sm:w-auto text-lg px-8 py-3">
-                <Link href="/tournaments">Explore Tournaments</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild className="w-full sm:w-auto text-lg px-8 py-3">
-                <Link href="/login">Organizer Portal</Link>
-              </Button>
+          <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+            <div className="md:w-1/2 text-center md:text-left">
+              <Crown className="w-20 h-20 md:w-24 md:h-24 text-primary mx-auto md:mx-0 mb-6" />
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-foreground">
+                Welcome to Chessmate Central
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto md:mx-0">
+                Your all-in-one platform for organizing, managing, and participating in chess tournaments with unparalleled ease and sophistication.
+              </p>
+              <div className="space-y-4 sm:space-y-0 sm:flex sm:justify-center md:justify-start sm:space-x-4">
+                <Button size="lg" asChild className="w-full sm:w-auto text-lg px-8 py-3">
+                  <Link href="/tournaments">Explore Tournaments</Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="w-full sm:w-auto text-lg px-8 py-3">
+                  <Link href="/login">Organizer Portal</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="md:w-1/2 mt-8 md:mt-0 flex justify-center">
+              <div className="relative w-full max-w-md md:max-w-lg aspect-[4/3] rounded-lg overflow-hidden shadow-2xl">
+                <Image
+                  src="https://placehold.co/600x450.png" 
+                  alt="3D Chessboard visualization with people playing"
+                  fill
+                  style={{objectFit: "cover"}}
+                  className="bg-muted"
+                  data-ai-hint="3D chess game"
+                  priority
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -158,7 +173,7 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
               Latest Tournaments
             </h2>
-            {isLoadingTournaments && displayTournaments.length === 0 ? ( // Show skeleton only if loading and no data yet
+            {isLoadingTournaments && displayTournaments.length === 0 ? ( 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[1,2,3].map(i => <Skeleton key={`tourn-skeleton-${i}`} className="h-[450px] w-full rounded-lg"/>)}
               </div>
@@ -192,7 +207,7 @@ export default function HomePage() {
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
                 Latest From Our Blog
               </h2>
-              {isLoadingBlogPosts && latestBlogPosts.length === 0 ? ( // Show skeleton only if loading and no data yet
+              {isLoadingBlogPosts && latestBlogPosts.length === 0 ? ( 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {[1,2,3].map(i => <Skeleton key={`blog-skeleton-${i}`} className="h-[450px] w-full rounded-lg"/>)}
                 </div>
@@ -323,3 +338,4 @@ export default function HomePage() {
     </>
   );
 }
+
